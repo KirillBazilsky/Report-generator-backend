@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  nickname String
+  projects Project[]
+  tasks    Task[]
+  dailyRecords DailyRecord[]
+}
+
+model Project {
+  id       Int       @id @default(autoincrement())
+  name     String
+  user     User      @relation(fields: [userId], references: [id])
+  userId   Int
+  tasks    Task[]
+  dailyRecords DailyRecord[]
+}
+
+enum TaskStatus {
+  IN_PROGRESS
+  IN_REVIEW
+  BLOCKED
+  CLOSED
+  DONE
+}
+
+model Task {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  status      TaskStatus  @default(IN_PROGRESS)
+  startDate   DateTime?
+  endDate     DateTime?
+  project     Project     @relation(fields: [projectId], references: [id])
+  projectId   Int
+  user        User        @relation(fields: [userId], references: [id])
+  userId      Int
+  dailyTasks  DailyTask[]
+}
+
+model DailyRecord {
+  id        Int       @id @default(autoincrement())
+  date      DateTime
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  dailyTasks DailyTask[]
+  projects  Project[]
+}
+
+model DailyTask {
+  id         Int        @id @default(autoincrement())
+  dailyRecord DailyRecord @relation(fields: [dailyRecordId], references: [id])
+  dailyRecordId Int
+  task       Task       @relation(fields: [taskId], references: [id])
+  taskId     Int
+  status     TaskStatus
+  comment    String? 
+}
