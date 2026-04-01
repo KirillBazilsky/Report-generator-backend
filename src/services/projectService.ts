@@ -19,7 +19,7 @@ export class ProjectService {
   }
 
   async get(payload: {
-    searchParams?: Record<string, string>
+    searchParams?: Record<string, string | undefined>
     pagination?: TPaginationProps
   }): Promise<TWithPaginationResponse<Project[]>> {
     const { skip, take } = calculatePagination(payload.pagination)

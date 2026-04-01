@@ -54,7 +54,7 @@ export class TaskService {
   }
 
   async get(payload: {
-    searchParams?: Record<string, string>
+    searchParams?: Record<string, string | undefined>
     pagination?: TPaginationProps
   }): Promise<TWithPaginationResponse<Task[]>> {
     const { skip, take } = calculatePagination(payload.pagination)

@@ -28,7 +28,7 @@ export class DailyRecordService {
   }
 
   async get(payload: {
-    searchParams?: Record<string, string>
+    searchParams?: Record<string, string | undefined>
     pagination?: TPaginationProps
   }): Promise<TWithPaginationResponse<DailyRecord[]>> {
     const { skip, take } = calculatePagination(payload.pagination)
