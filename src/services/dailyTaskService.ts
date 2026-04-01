@@ -2,6 +2,7 @@ import { prisma } from '../prisma'
 import { DailyTask } from '@prisma/client'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
+import { transformSearchParams } from '../helpers/transformSearchParams'
 
 export class DailyTaskService {
   async create(recordId: number, taskId: number, taskData: Partial<DailyTask>) {
@@ -42,18 +43,19 @@ export class DailyTaskService {
   }
 
   async get(payload: {
-    searchParams?: Partial<DailyTask>
+    searchParams?: Record<string, string>
     pagination?: TPaginationProps
   }): Promise<TWithPaginationResponse<DailyTask[]>> {
     const { skip, take } = calculatePagination(payload.pagination)
 
+    const where = payload.searchParams
+      ? transformSearchParams<DailyTask, 'DailyTask'>(payload.searchParams, 'DailyTask')
+      : {}
+
     const total = await prisma.dailyTask.count()
 
     const data = await prisma.dailyTask.findMany({
-      where: {
-        ...payload.searchParams,
-      },
-
+      where,
       include: {
         dailyRecord: true,
         task: true,

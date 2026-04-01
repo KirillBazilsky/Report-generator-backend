@@ -5,7 +5,7 @@ export const getWithPagination = async <T>(
   req: Request,
   res: Response,
   method: (payload: {
-    searchParams?: Partial<T>
+    searchParams?: Record<string, string | undefined>
     pagination?: TPaginationProps
   }) => Promise<TWithPaginationResponse<T[]>>
 ) => {
@@ -13,7 +13,7 @@ export const getWithPagination = async <T>(
     const { page, pageSize, ...searchParams } = req.query
 
     const response = await method({
-      searchParams: { ...((searchParams as T)) },
+      searchParams: { ...(searchParams as Record<string, string | undefined>)},
       pagination: {
         page: Number(page ?? 1),
         pageSize: Number(pageSize ?? 10),

@@ -99,7 +99,7 @@ export class UserController {
    *                   properties:
    *                     page:
    *                       type: integer
-   *                     limit:
+   *                     pageSize:
    *                       type: integer
    *                     total:
    *                       type: integer

@@ -2,6 +2,7 @@ import { User } from '@prisma/client'
 import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
+import { transformSearchParams } from '../helpers/transformSearchParams'
 
 export class UserService {
   async create(email: string, nickname: string) {
@@ -25,18 +26,19 @@ export class UserService {
   }
 
   async get(payload: {
-    searchParams?: Partial<User>
+    searchParams?: Record<string, string | undefined>
     pagination?: TPaginationProps
   }): Promise<TWithPaginationResponse<User[]>> {
-    const { skip, take } = calculatePagination(payload.pagination);
+    const where = payload.searchParams
+      ? transformSearchParams<User, 'User'>(payload.searchParams, 'User')
+      : {}
+
+    const { skip, take } = calculatePagination(payload.pagination)
 
     const total = await prisma.user.count()
 
     const data = await prisma.user.findMany({
-      where: {
-        ...payload.searchParams,
-      },
-
+      where,
       include: {
         dailyRecords: true,
         projects: true,
