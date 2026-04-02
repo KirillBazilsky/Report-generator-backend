@@ -3,6 +3,7 @@ import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
+import { idSelector } from '../helpers/prismaSelectors'
 
 export class UserService {
   async create(email: string, nickname: string) {
@@ -39,10 +40,13 @@ export class UserService {
 
     const data = await prisma.user.findMany({
       where,
-      include: {
-        dailyRecords: true,
-        projects: true,
-        tasks: true,
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        dailyRecords: idSelector,
+        projects: idSelector,
+        tasks: idSelector
       },
       skip,
       take,

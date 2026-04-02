@@ -14,7 +14,15 @@
  *         - `CLOSED`: Task is closed
  *         - `DONE`: Task is completed
  *       example: IN_PROGRESS
- *
+ * 
+ *     # IdsArray
+ *     IdsArray:
+ *        type: array
+ *        items: 
+ *          type: integer
+ *        description: List of IDs
+ *        example: 42
+ * 
  *     # User model
  *     User:
  *       type: object
@@ -35,18 +43,18 @@
  *         projects:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Project'
- *           description: List of user's projects
+ *             $ref: '#/components/schemas/IdsArray'
+ *           description: List of user's projects IDs
  *         tasks:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Task'
- *           description: List of user's tasks
+ *             $ref: '#/components/schemas/IdsArray'
+ *           description: List of user's tasks IDs
  *         dailyRecords:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/DailyRecord'
- *           description: User's daily records
+ *             $ref: '#/components/schemas/IdsArray'
+ *           description: User's daily records IDs
  *       required:
  *         - id
  *         - email
@@ -118,18 +126,29 @@
  *           description: ID of the project this task belongs to
  *           example: 1
  *         project:
- *           $ref: '#/components/schemas/Project'
+ *           type: object
+ *           properties:
+ *              id: 
+ *                 type: integer
+ *                 example: 1
+ *              name: 
+ *                 type: string
+ *                 example: E-commerce Platform
  *         userId:
  *           type: integer
  *           description: ID of the user assigned to this task
  *           example: 5
  *         user:
- *           $ref: '#/components/schemas/User'
+ *           type: object
+ *           properties:
+ *              id: 
+ *                 type: integer
+ *                 example: 1
+ *              nickName: 
+ *                 type: string
+ *                 example: johndoe123
  *         dailyTasks:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/DailyTask'
- *           description: Daily task entries
+ *             $ref: '#/components/schemas/IdsArray'
  *       required:
  *         - id
  *         - name

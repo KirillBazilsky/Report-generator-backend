@@ -3,6 +3,7 @@ import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
+import { idSelector, nameSelector, nickNameSelector } from '../helpers/prismaSelectors'
 
 export class TaskService {
   async create(
@@ -67,10 +68,18 @@ export class TaskService {
 
     const data = await prisma.task.findMany({
       where,
-      include: {
-        dailyTasks: true,
-        project: true,
-        user: true,
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        description: true,
+        project: nameSelector,
+        projectId: true,
+        user: nickNameSelector,
+        userId: true,
+        dailyTasks: idSelector,
       },
       skip,
       take,

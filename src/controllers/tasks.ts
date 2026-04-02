@@ -126,17 +126,8 @@ export class TaskController {
    *                   type: array
    *                   items:
    *                     $ref: '#/components/schemas/Task'
-   *                 pagination:
-   *                   type: object
-   *                   properties:
-   *                     page:
-   *                       type: integer
-   *                     limit:
-   *                       type: integer
-   *                     total:
-   *                       type: integer
-   *                     pages:
-   *                       type: integer
+   *                 total:
+   *                    type: integer
    *       400:
    *         description: Invalid query parameters
    *         content:

@@ -94,17 +94,8 @@ export class UserController {
    *                   type: array
    *                   items:
    *                     $ref: '#/components/schemas/User'
-   *                 pagination:
-   *                   type: object
-   *                   properties:
-   *                     page:
-   *                       type: integer
-   *                     pageSize:
-   *                       type: integer
-   *                     total:
-   *                       type: integer
-   *                     pages:
-   *                       type: integer
+   *                 total: 
+   *                    type: integer
    *       400:
    *         description: Invalid query parameters
    *         content:
