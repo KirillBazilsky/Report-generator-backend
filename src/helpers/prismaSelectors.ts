@@ -87,7 +87,7 @@ export const fullTaskSelector = {
   ...baseTaskSelector,
   user: { select: baseUserSelector },
   dailyTasks: { select: baseDailyTaskSelector },
-  projects: { select: baseProjectSelector },
+  project: { select: baseProjectSelector },
 }
 
 export const fullDailyRecordSelector = {
