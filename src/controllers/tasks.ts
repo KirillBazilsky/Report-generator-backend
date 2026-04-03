@@ -69,8 +69,11 @@ export class TaskController {
    * @swagger
    * /tasks:
    *   get:
-   *     summary: Get all tasks with pagination
-   *     description: Returns a paginated list of tasks with optional filters
+   *     summary: Get tasks with filtering or pagination
+   *     description: |
+   *       Returns tasks based on query parameters.
+   *       - If `id` is provided, returns a single task object.
+   *       - Otherwise, returns a paginated list of tasks.
    *     tags: [Tasks]
    *     parameters:
    *       - in: query
@@ -82,7 +85,7 @@ export class TaskController {
    *         description: Page number
    *         example: 1
    *       - in: query
-   *         name: limit
+   *         name: pageSize
    *         schema:
    *           type: integer
    *           minimum: 1
@@ -90,6 +93,12 @@ export class TaskController {
    *           default: 10
    *         description: Number of items per page
    *         example: 10
+   *       - in: query
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         description: Get task by exact ID (overrides pagination)
+   *         example: 1
    *       - in: query
    *         name: userId
    *         schema:
@@ -107,7 +116,7 @@ export class TaskController {
    *         schema:
    *           $ref: '#/components/schemas/TaskStatus'
    *         description: Filter by task status
-   *         example: IN_PROGRESS
+   *         example: "IN_PROGRESS"
    *       - in: query
    *         name: name
    *         schema:
@@ -116,18 +125,24 @@ export class TaskController {
    *         example: "authentication"
    *     responses:
    *       200:
-   *         description: Paginated list of tasks
+   *         description: Successful response
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 data:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/Task'
-   *                 total:
-   *                    type: integer
+   *               oneOf:
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/TaskFull'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/TaskBase'
+   *                     total:
+   *                       type: integer
+   *                       example: 42
    *       400:
    *         description: Invalid query parameters
    *         content:
@@ -136,6 +151,14 @@ export class TaskController {
    *               $ref: '#/components/schemas/Error'
    */
   async get(req: Request, res: Response) {
+    const { id } = req.query
+
+    if (id) {
+      const task = await this.taskService.getTaskById(Number(id))
+
+      return res.json({ data: task })
+    }
+
     return getWithPagination<Task>(req, res, this.taskService.get)
   }
 
@@ -153,45 +176,48 @@ export class TaskController {
    *           schema:
    *             type: object
    *             required:
-   *               - userId
+   *               - id
    *             properties:
-   *               userId:
+   *               id:
    *                 type: integer
    *                 description: ID of the task to update
    *                 example: 42
-   *               name:
-   *                 type: string
-   *                 description: Updated task name
-   *                 example: "Implement authentication with refresh tokens"
-   *               description:
-   *                 type: string
-   *                 description: Updated description
-   *                 example: "Add JWT refresh token rotation mechanism"
-   *               status:
-   *                 $ref: '#/components/schemas/TaskStatus'
-   *                 description: Updated task status
-   *                 example: IN_REVIEW
-   *               startDate:
-   *                 type: string
-   *                 format: date-time
-   *                 description: Updated start date
-   *                 example: "2024-03-25T10:00:00Z"
-   *               endDate:
-   *                 type: string
-   *                 format: date-time
-   *                 description: Updated end date
-   *                 example: "2024-03-30T18:00:00Z"
-   *               projectId:
-   *                 type: integer
-   *                 description: Updated project ID
-   *                 example: 2
+   *               payload:
+   *                 type: object
+   *                 properties:
+   *                   name:
+   *                     type: string
+   *                     description: Updated task name
+   *                     example: "Implement authentication with refresh tokens"
+   *                   description:
+   *                     type: string
+   *                     description: Updated description
+   *                     example: "Add JWT refresh token rotation mechanism"
+   *                   status:
+   *                     $ref: '#/components/schemas/TaskStatus'
+   *                     description: Updated task status
+   *                     example: IN_REVIEW
+   *                   startDate:
+   *                     type: string
+   *                     format: date-time
+   *                     description: Updated start date
+   *                     example: "2024-03-25T10:00:00Z"
+   *                   endDate:
+   *                     type: string
+   *                     format: date-time
+   *                     description: Updated end date
+   *                     example: "2024-03-30T18:00:00Z"
+   *                   projectId:
+   *                     type: integer
+   *                     description: Updated project ID
+   *                     example: 2
    *     responses:
    *       200:
    *         description: Task updated successfully
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/Task'
+   *               $ref: '#/components/schemas/TaskFull'
    *       400:
    *         description: Invalid input, task not found, or project not found
    *         content:
@@ -201,8 +227,8 @@ export class TaskController {
    */
   async update(req: Request, res: Response) {
     try {
-      const { userId, ...data } = req.body
-      const response = await this.taskService.update(userId, data)
+      const { id, payload } = req.body
+      const response = await this.taskService.update(id, payload)
 
       res.status(200).json(response)
     } catch (err) {
@@ -242,7 +268,7 @@ export class TaskController {
    *                   type: string
    *                   example: "Task deleted successfully"
    *                 deletedTask:
-   *                   $ref: '#/components/schemas/Task'
+   *                   $ref: '#/components/schemas/TaskBase'
    *       400:
    *         description: Invalid ID or task not found
    *         content:

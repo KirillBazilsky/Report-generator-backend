@@ -48,8 +48,12 @@ export class UserController {
    * @swagger
    * /users:
    *   get:
-   *     summary: Get all users with pagination
-   *     description: Returns a paginated list of users
+   *     summary: Get users with filtering or pagination
+   *     description: |
+   *       Returns users based on query parameters.
+   *       - If `id` is provided, returns a single user object.
+   *       - If `email` is provided, returns a single user object.
+   *       - Otherwise, returns a paginated list of users.
    *     tags: [Users]
    *     parameters:
    *       - in: query
@@ -61,7 +65,7 @@ export class UserController {
    *         description: Page number
    *         example: 1
    *       - in: query
-   *         name: limit
+   *         name: pageSize
    *         schema:
    *           type: integer
    *           minimum: 1
@@ -70,11 +74,17 @@ export class UserController {
    *         description: Number of items per page
    *         example: 10
    *       - in: query
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         description: Get user by exact ID (overrides pagination)
+   *         example: 1
+   *       - in: query
    *         name: email
    *         schema:
    *           type: string
    *           format: email
-   *         description: Filter by email (partial match)
+   *         description: Get user by exact email (overrides pagination)
    *         example: "john@example.com"
    *       - in: query
    *         name: nickname
@@ -88,14 +98,22 @@ export class UserController {
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 data:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/User'
-   *                 total: 
-   *                    type: integer
+   *              oneOf:
+   *                 # Case 1: Single user (by id or email)
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/UserFull'
+   *                 # Case 2: Paginated list
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/UserBase'
+   *                     total:
+   *                       type: integer
+   *                       example: 42
    *       400:
    *         description: Invalid query parameters
    *         content:
@@ -104,6 +122,20 @@ export class UserController {
    *               $ref: '#/components/schemas/Error'
    */
   async get(req: Request, res: Response) {
+    const { page, pageSize, ...searchParams } = req.query
+
+    if (searchParams.email) {
+      const user = await this.userService.getUserByEmail(searchParams.email as string)
+
+       return res.json({ data: user })
+    }
+
+    if (searchParams.id) {
+      const user = await this.userService.getUserById(Number(searchParams.id))
+
+      return res.json({ data: user })
+    }
+
     return getWithPagination<User>(req, res, this.userService.get)
   }
 

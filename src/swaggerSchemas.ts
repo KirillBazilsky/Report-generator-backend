@@ -14,17 +14,29 @@
  *         - `CLOSED`: Task is closed
  *         - `DONE`: Task is completed
  *       example: IN_PROGRESS
+ *
+ *     IdObject:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: Entity ID
+ *           example: 42
+ *       required:
+ *         - id
  * 
- *     # IdsArray
  *     IdsArray:
- *        type: array
- *        items: 
- *          type: integer
- *        description: List of IDs
- *        example: 42
- * 
- *     # User model
- *     User:
+ *       type: array
+ *       items:
+ *         $ref: '#/components/schemas/IdObject'
+ *       description: List of entity IDs as objects
+ *       example:
+ *         - id: 42
+ *         - id: 43
+ *         - id: 44
+ *
+ *     # User base model
+ *     UserBase:
  *       type: object
  *       properties:
  *         id:
@@ -60,8 +72,29 @@
  *         - email
  *         - nickname
  *
- *     # Project model
- *     Project:
+ * # User full model
+ *     UserFull:
+ *       allOff: '#/components/schemas/UserBase'
+ *       type: object
+ *       properties:
+ *         projects:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/ProjectBase'
+ *           description: List of user's projects
+ *         tasks:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/TaskBase'
+ *           description: List of user's tasks
+ *         dailyRecords:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/DailyRecordBase'
+ *           description: User's daily records
+ *
+ *     #Project base model
+ *     ProjectBase:
  *       type: object
  *       properties:
  *         id:
@@ -77,24 +110,45 @@
  *           description: ID of the project owner
  *           example: 5
  *         user:
- *           $ref: '#/components/schemas/User'
+ *           $ref: '#/components/schemas/UserBase'
  *         tasks:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Task'
- *           description: List of tasks in this project
+ *             $ref: '#/components/schemas/IdsArray'
+ *           description: List of tasks in this project ids
  *         dailyRecords:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/DailyRecord'
- *           description: Daily records associated with this project
+ *             $ref: '#/components/schemas/IdsArray'
+ *           description: Daily records ids associated with this project
  *       required:
  *         - id
  *         - name
  *         - userId
  *
- *     # Task model
- *     Task:
+ *
+ *     # Project full model
+ *     ProjectFull:
+ *       allOff: '#/components/schemas/UserBase'
+ *       type: object
+ *       properties:
+ *         tasks:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/TaskBase'
+ *           description: List of tasks in this project
+ *         dailyRecords:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/DailyRecordBase'
+ *           description: Daily records associated with this project
+ *       required:
+ *         - id
+ *         - name
+ *         - userId
+ * 
+ *     # Task base model
+ *     TaskBase:
  *       type: object
  *       properties:
  *         id:
@@ -126,29 +180,16 @@
  *           description: ID of the project this task belongs to
  *           example: 1
  *         project:
- *           type: object
- *           properties:
- *              id: 
- *                 type: integer
- *                 example: 1
- *              name: 
- *                 type: string
- *                 example: E-commerce Platform
+ *           $ref: '#/components/schemas/ProjectBase'
  *         userId:
  *           type: integer
  *           description: ID of the user assigned to this task
  *           example: 5
  *         user:
- *           type: object
- *           properties:
- *              id: 
- *                 type: integer
- *                 example: 1
- *              nickName: 
- *                 type: string
- *                 example: johndoe123
+ *            $ref: '#/components/schemas/UserBase'
  *         dailyTasks:
- *             $ref: '#/components/schemas/IdsArray'
+ *            $ref: '#/components/schemas/IdsArray'
+ *            description: List of daily tasks of this task
  *       required:
  *         - id
  *         - name
@@ -156,8 +197,16 @@
  *         - projectId
  *         - userId
  *
- *     # DailyRecord model
- *     DailyRecord:
+ *     # Task full model
+ *     TaskFull:
+ *       allOff: '#/components/schemas/TaskBase'
+ *       type: object
+ *       properties:
+ *         dailyTasks:
+ *             $ref: '#/components/schemas/DailyTaskBase'
+ *      
+ *     # DailyRecord base model
+ *     DailyRecordBase:
  *       type: object
  *       properties:
  *         id:
@@ -174,24 +223,40 @@
  *           description: ID of the user this record belongs to
  *           example: 5
  *         user:
- *           $ref: '#/components/schemas/User'
+ *           $ref: '#/components/schemas/UserBase'
+ *         dailyTasks:
+ *           $ref: '#/components/schemas/IdsArray'
+ *           description: Tasks ids logged for this day
+ *         projects:
+ *           $ref: '#/components/schemas/IdsArray'
+ *           description: Projects ids worked on this day
+ *       required:
+ *         - id
+ *         - date
+ *         - userId
+ * 
+ *     # DailyRecord full model
+ *     DailyRecordFull:
+ *       allOff: '#/components/schemas/DailyRecordBase'
+ *       type: object
+ *       properties:
  *         dailyTasks:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/DailyTask'
+ *             $ref: '#/components/schemas/DailyTaskBase'
  *           description: Tasks logged for this day
  *         projects:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Project'
+ *             $ref: '#/components/schemas/ProjectBase'
  *           description: Projects worked on this day
  *       required:
  *         - id
  *         - date
  *         - userId
- *
- *     # DailyTask model
- *     DailyTask:
+ * 
+ *     # DailyTask base model
+ *     DailyTaskBase:
  *       type: object
  *       properties:
  *         id:
@@ -203,13 +268,13 @@
  *           description: ID of the parent daily record
  *           example: 10
  *         dailyRecord:
- *           $ref: '#/components/schemas/DailyRecord'
+ *           $ref: '#/components/schemas/DailyRecordBase'
  *         taskId:
  *           type: integer
  *           description: ID of the task
  *           example: 42
  *         task:
- *           $ref: '#/components/schemas/Task'
+ *           $ref: '#/components/schemas/TaskBase'
  *         status:
  *           $ref: '#/components/schemas/TaskStatus'
  *         comment:
@@ -226,14 +291,21 @@
  *     CreateUserRequest:
  *       type: object
  *       properties:
- *         email:
- *           type: string
- *           format: email
- *           example: newuser@example.com
- *         nickname:
- *           type: string
- *           example: newuser123
+ *         id:
+ *             type: integer
+ *             example: 42
+ *         payload: 
+ *             type: object
+ *             properties: 
+ *                email:
+ *                  type: string
+ *                  format: email
+ *                  example: newuser@example.com
+ *             nickname:
+ *                  type: string
+ *                  example: newuser123
  *       required:
+ *         - id
  *         - email
  *         - nickname
  *

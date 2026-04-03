@@ -3,7 +3,7 @@ import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
-import { idSelector, nameSelector, nickNameSelector } from '../helpers/prismaSelectors'
+import { baseTaskSelector, fullTaskSelector, idSelector, nameSelector, nickNameSelector } from '../helpers/prismaSelectors'
 
 export class TaskService {
   async create(
@@ -32,8 +32,8 @@ export class TaskService {
     })
   }
 
-  async update(id: number, data: Partial<Task>) {
-    const isTaskEnded = data.status === 'DONE' || data.status === 'CLOSED'
+  async update(id: number, payload: Partial<Task>) {
+    const isTaskEnded = payload.status === 'DONE' || payload.status === 'CLOSED'
 
     if (isTaskEnded) {
       prisma.task.update({
@@ -50,7 +50,7 @@ export class TaskService {
       where: {
         id: id,
       },
-      data: data,
+      data: payload,
     })
   }
 
@@ -68,19 +68,7 @@ export class TaskService {
 
     const data = await prisma.task.findMany({
       where,
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        startDate: true,
-        endDate: true,
-        description: true,
-        project: nameSelector,
-        projectId: true,
-        user: nickNameSelector,
-        userId: true,
-        dailyTasks: idSelector,
-      },
+      select: baseTaskSelector,
       skip,
       take,
     })
@@ -89,6 +77,13 @@ export class TaskService {
       data,
       total,
     }
+  }
+
+  async getTaskById(id: number) {
+    return prisma.task.findUnique({
+      where: { id },
+      select: fullTaskSelector,
+    })
   }
 
   async delete(id: number) {

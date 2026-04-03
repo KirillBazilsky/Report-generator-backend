@@ -37,7 +37,7 @@ export class ProjectController {
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/Project'
+   *               $ref: '#/components/schemas/ProjectFull'
    *       400:
    *         description: Invalid input or user not found
    *         content:
@@ -60,8 +60,11 @@ export class ProjectController {
    * @swagger
    * /projects:
    *   get:
-   *     summary: Get all projects with pagination
-   *     description: Returns a paginated list of projects
+   *     summary: Get projects with filtering or pagination
+   *     description: |
+   *       Returns projects based on query parameters.
+   *       - If `id` is provided, returns a single project object.
+   *       - Otherwise, returns a paginated list of projects.
    *     tags: [Projects]
    *     parameters:
    *       - in: query
@@ -73,7 +76,7 @@ export class ProjectController {
    *         description: Page number
    *         example: 1
    *       - in: query
-   *         name: limit
+   *         name: pageSize
    *         schema:
    *           type: integer
    *           minimum: 1
@@ -81,6 +84,12 @@ export class ProjectController {
    *           default: 10
    *         description: Number of items per page
    *         example: 10
+   *       - in: query
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         description: Get project by exact ID (overrides pagination)
+   *         example: 1
    *       - in: query
    *         name: userId
    *         schema:
@@ -95,18 +104,24 @@ export class ProjectController {
    *         example: "E-commerce"
    *     responses:
    *       200:
-   *         description: Paginated list of projects
+   *         description: Successful response
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 data:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/Project'
-   *                 total:
-   *                    type: integer
+   *               oneOf:
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/ProjectFull'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/ProjectBase'
+   *                     total:
+   *                       type: integer
+   *                       example: 42
    *       400:
    *         description: Invalid query parameters
    *         content:
@@ -115,6 +130,14 @@ export class ProjectController {
    *               $ref: '#/components/schemas/Error'
    */
   async get(req: Request, res: Response) {
+    const { id } = req.query
+
+    if (id) {
+      const project = await this.projectService.getProjectById(Number(id))
+
+      return res.json({ data: project })
+    }
+
     return getWithPagination<Project>(req, res, this.projectService.get)
   }
 
@@ -150,7 +173,7 @@ export class ProjectController {
    *                   type: string
    *                   example: "Project deleted successfully"
    *                 deletedProject:
-   *                   $ref: '#/components/schemas/Project'
+   *                   $ref: '#/components/schemas/ProjectBase'
    *       400:
    *         description: Invalid ID or project not found
    *         content:

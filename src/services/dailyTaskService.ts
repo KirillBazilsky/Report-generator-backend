@@ -3,6 +3,7 @@ import { DailyTask } from '@prisma/client'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
+import { baseDailyRecordSelector, baseDailyTaskSelector, baseTaskSelector } from '../helpers/prismaSelectors'
 
 export class DailyTaskService {
   async create(recordId: number, taskId: number, taskData: Partial<DailyTask>) {
@@ -25,12 +26,12 @@ export class DailyTaskService {
     })
   }
 
-  async update(id: number, taskData: Partial<DailyTask>) {
+  async update(id: number, payload: Partial<DailyTask>) {
     return prisma.dailyTask.update({
       where: {
         id,
       },
-      data: taskData,
+      data: payload,
     })
   }
 
@@ -56,10 +57,7 @@ export class DailyTaskService {
 
     const data = await prisma.dailyTask.findMany({
       where,
-      include: {
-        dailyRecord: true,
-        task: true,
-      },
+      select: baseDailyTaskSelector,
       skip,
       take,
     })
@@ -68,5 +66,12 @@ export class DailyTaskService {
       data,
       total,
     }
+  }
+
+  async getDailyTaskById(id: number) {
+    return prisma.dailyTask.findUnique({
+      where: { id },
+      select: baseDailyTaskSelector,
+    })
   }
 }

@@ -3,6 +3,7 @@ import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
+import { baseDailyRecordSelector, baseUserSelector, fullDailyRecordSelector, idSelector } from '../helpers/prismaSelectors'
 
 export class DailyRecordService {
   async create(userId: number, date?: string) {
@@ -18,12 +19,12 @@ export class DailyRecordService {
     })
   }
 
-  async update(id: number, data: Partial<DailyRecord>) {
+  async update(id: number, payload: Partial<DailyRecord>) {
     return await prisma.dailyRecord.update({
       where: {
         id,
       },
-      data,
+      data: payload,
     })
   }
 
@@ -41,11 +42,7 @@ export class DailyRecordService {
 
     const data = await prisma.dailyRecord.findMany({
       where,
-      include: {
-        dailyTasks: true,
-        user: true,
-        projects: true,
-      },
+      select: baseDailyRecordSelector,
       skip,
       take,
     })
@@ -54,6 +51,13 @@ export class DailyRecordService {
       data,
       total,
     }
+  }
+
+  async getDailyRecordById(id: number) {
+    return prisma.dailyRecord.findUnique({
+      where: { id },
+      select: fullDailyRecordSelector,
+    })
   }
 
   async delete(id: number) {

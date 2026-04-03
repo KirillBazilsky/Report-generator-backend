@@ -9,37 +9,72 @@ export class DailyRecordController {
   /**
    * @swagger
    * /daily-records:
-   *   post:
-   *     summary: Create a new daily record
-   *     description: Creates a daily record for a user for the current date
+   *   get:
+   *     summary: Get daily records with filtering or pagination
+   *     description: |
+   *       Returns daily records based on query parameters.
+   *       - If `id` is provided, returns a single daily record object.
+   *       - Otherwise, returns a paginated list of daily records.
    *     tags: [Daily Records]
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - userId
-   *             properties:
-   *               userId:
-   *                 type: integer
-   *                 description: ID of the user
-   *                 example: 5
-   *               date:
-   *                 type: string
-   *                 format: date
-   *                 description: Date for the record (optional, defaults to current date)
-   *                 example: "2024-03-30"
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Page number
+   *         example: 1
+   *       - in: query
+   *         name: pageSize
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 10
+   *         description: Number of items per page
+   *         example: 10
+   *       - in: query
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         description: Get daily record by exact ID (overrides pagination)
+   *         example: 1
+   *       - in: query
+   *         name: userId
+   *         schema:
+   *           type: integer
+   *         description: Filter by user ID
+   *         example: 5
+   *       - in: query
+   *         name: date
+   *         schema:
+   *           type: string
+   *           format: date
+   *         description: Filter by specific date
+   *         example: "2024-03-30"
    *     responses:
    *       200:
-   *         description: Daily record created successfully
+   *         description: Successful response
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/DailyRecord'
+   *               oneOf:
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/DailyRecordFull'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/DailyRecordBase'
+   *                     total:
+   *                       type: integer
+   *                       example: 42
    *       400:
-   *         description: Invalid input or user not found
+   *         description: Invalid query parameters
    *         content:
    *           application/json:
    *             schema:
@@ -60,8 +95,11 @@ export class DailyRecordController {
    * @swagger
    * /daily-records:
    *   get:
-   *     summary: Get all daily records with pagination
-   *     description: Returns a paginated list of daily records
+   *     summary: Get daily records with filtering or pagination
+   *     description: |
+   *       Returns users based on query parameters.
+   *       - If `id` is provided, returns a single object.
+   *       - Otherwise, returns a paginated list of daily records.
    *     tags: [Daily Records]
    *     parameters:
    *       - in: query
@@ -73,7 +111,7 @@ export class DailyRecordController {
    *         description: Page number
    *         example: 1
    *       - in: query
-   *         name: limit
+   *         name: pageSize
    *         schema:
    *           type: integer
    *           minimum: 1
@@ -81,6 +119,11 @@ export class DailyRecordController {
    *           default: 10
    *         description: Number of items per page
    *         example: 10
+   *       - in: query
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         description: Get daily record by exact ID (overrides pagination)
    *       - in: query
    *         name: userId
    *         schema:
@@ -100,14 +143,20 @@ export class DailyRecordController {
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 data:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/DailyRecord'
-   *                 total:
-   *                    type: integer
+   *               oneOf:
+   *                  # Case 1: Single daily record (by id)
+   *                  - type: object
+   *                    properties:
+   *                      data: '#/components/schemas/DailyRecordFull'
+   *                  # Case 2: Paginated list
+   *                  - type: object
+   *                    properties:
+   *                      data:
+   *                      type: array
+   *                      items:
+   *                        $ref: '#/components/schemas/DailyRecordBase'
+   *                      total:
+   *                        type: integer
    *       400:
    *         description: Invalid query parameters
    *         content:
@@ -116,6 +165,14 @@ export class DailyRecordController {
    *               $ref: '#/components/schemas/Error'
    */
   async get(req: Request, res: Response) {
+    const { id } = req.query
+
+    if (id) {
+      const dailyRecord = await this.dailyRecordService.getDailyRecordById(Number(id))
+
+      return res.json({ data: dailyRecord })
+    }
+
     return getWithPagination<DailyRecord>(req, res, this.dailyRecordService.get)
   }
 
@@ -133,14 +190,14 @@ export class DailyRecordController {
    *           schema:
    *             type: object
    *             required:
-   *               - userId
+   *               - id
    *               - data
    *             properties:
-   *               userId:
+   *               id:
    *                 type: integer
-   *                 description: ID of the user
+   *                 description: ID of the daily record
    *                 example: 5
-   *               data:
+   *               payload:
    *                 type: object
    *                 description: Data to update
    *                 properties:
@@ -160,7 +217,7 @@ export class DailyRecordController {
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/DailyRecord'
+   *               $ref: '#/components/schemas/DailyRecordFull'
    *       400:
    *         description: Invalid input or record not found
    *         content:
@@ -170,8 +227,8 @@ export class DailyRecordController {
    */
   async update(req: Request, res: Response) {
     try {
-      const { userId, data } = req.body
-      const record = await this.dailyRecordService.update(userId, data)
+      const { id, payload } = req.body
+      const record = await this.dailyRecordService.update(id, payload)
 
       res.status(200).json(record)
     } catch (err) {
@@ -211,7 +268,7 @@ export class DailyRecordController {
    *                   type: string
    *                   example: "Daily record deleted successfully"
    *                 deletedRecord:
-   *                   $ref: '#/components/schemas/DailyRecord'
+   *                   $ref: '#/components/schemas/DailyRecordBase'
    *       400:
    *         description: Invalid ID or record not found
    *         content:

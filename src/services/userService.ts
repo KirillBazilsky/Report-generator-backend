@@ -3,7 +3,7 @@ import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
-import { idSelector } from '../helpers/prismaSelectors'
+import { baseUserSelector, fullUserSelector, idSelector } from '../helpers/prismaSelectors'
 
 export class UserService {
   async create(email: string, nickname: string) {
@@ -15,14 +15,14 @@ export class UserService {
   async getUserById(id: number) {
     return prisma.user.findUnique({
       where: { id },
-      include: { projects: true, tasks: true, dailyRecords: true },
+      select: fullUserSelector,
     })
   }
 
   async getUserByEmail(email: string) {
     return prisma.user.findUnique({
       where: { email },
-      include: { projects: true, tasks: true, dailyRecords: true },
+      select: fullUserSelector,
     })
   }
 
@@ -40,14 +40,7 @@ export class UserService {
 
     const data = await prisma.user.findMany({
       where,
-      select: {
-        id: true,
-        email: true,
-        nickname: true,
-        dailyRecords: idSelector,
-        projects: idSelector,
-        tasks: idSelector
-      },
+      select: baseUserSelector,
       skip,
       take,
     })

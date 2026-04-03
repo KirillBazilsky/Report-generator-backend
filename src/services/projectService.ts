@@ -3,6 +3,7 @@ import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
+import { baseProjectSelector, fullProjectSelector, idSelector, nickNameSelector } from '../helpers/prismaSelectors'
 
 export class ProjectService {
   async create(name: string, userId: number) {
@@ -32,11 +33,7 @@ export class ProjectService {
 
     const data = await prisma.project.findMany({
       where,
-      include: {
-        dailyRecords: true,
-        tasks: true,
-        user: true,
-      },
+      select: baseProjectSelector,
       skip,
       take,
     })
@@ -45,6 +42,13 @@ export class ProjectService {
       data,
       total,
     }
+  }
+
+  async getProjectById(id: number) {
+    return prisma.project.findUnique({
+      where: { id },
+      select: fullProjectSelector,
+    })
   }
 
   async delete(id: number) {

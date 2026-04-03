@@ -47,7 +47,7 @@ export class DailyTasksController {
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/DailyTask'
+   *               $ref: '#/components/schemas/DailyTaskFull'
    *       400:
    *         description: Invalid input or record/task not found
    *         content:
@@ -70,8 +70,11 @@ export class DailyTasksController {
    * @swagger
    * /daily-tasks:
    *   get:
-   *     summary: Get all daily tasks with pagination
-   *     description: Returns a paginated list of daily task entries
+   *     summary: Get daily tasks with filtering or pagination
+   *     description: |
+   *       Returns daily tasks based on query parameters.
+   *       - If `id` is provided, returns a single daily task object.
+   *       - Otherwise, returns a paginated list of daily tasks.
    *     tags: [Daily Tasks]
    *     parameters:
    *       - in: query
@@ -83,7 +86,7 @@ export class DailyTasksController {
    *         description: Page number
    *         example: 1
    *       - in: query
-   *         name: limit
+   *         name: pageSize
    *         schema:
    *           type: integer
    *           minimum: 1
@@ -91,6 +94,12 @@ export class DailyTasksController {
    *           default: 10
    *         description: Number of items per page
    *         example: 10
+   *       - in: query
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         description: Get daily task by exact ID (overrides pagination)
+   *         example: 1
    *       - in: query
    *         name: dailyRecordId
    *         schema:
@@ -108,21 +117,27 @@ export class DailyTasksController {
    *         schema:
    *           $ref: '#/components/schemas/TaskStatus'
    *         description: Filter by task status
-   *         example: IN_PROGRESS
+   *         example: "IN_PROGRESS"
    *     responses:
    *       200:
-   *         description: Paginated list of daily tasks
+   *         description: Successful response
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 data:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/DailyTask'
-   *                 total:
-   *                    type: integer
+   *               oneOf:
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#/components/schemas/DailyTaskBase'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/DailyTaskBase'
+   *                     total:
+   *                       type: integer
+   *                       example: 42
    *       400:
    *         description: Invalid query parameters
    *         content:
@@ -131,6 +146,14 @@ export class DailyTasksController {
    *               $ref: '#/components/schemas/Error'
    */
   async get(req: Request, res: Response) {
+    const { id } = req.query
+
+    if (id) {
+      const dailyTask = await this.dailyTaskService.getDailyTaskById(Number(id))
+
+      return res.json({ data: dailyTask })
+    }
+
     return getWithPagination<DailyTask>(req, res, this.dailyTaskService.get)
   }
 
@@ -155,7 +178,7 @@ export class DailyTasksController {
    *                 type: integer
    *                 description: ID of the daily task to update
    *                 example: 100
-   *               data:
+   *               payload:
    *                 type: object
    *                 description: Data to update
    *                 properties:
@@ -173,7 +196,7 @@ export class DailyTasksController {
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/DailyTask'
+   *               $ref: '#/components/schemas/DailyTaskFull'
    *       400:
    *         description: Invalid input or daily task not found
    *         content:
@@ -183,8 +206,8 @@ export class DailyTasksController {
    */
   async update(req: Request, res: Response) {
     try {
-      const { id, data } = req.body
-      const response = await this.dailyTaskService.update(id, data)
+      const { id, payload } = req.body
+      const response = await this.dailyTaskService.update(id, payload)
 
       res.status(200).json(response)
     } catch (err) {
@@ -224,7 +247,7 @@ export class DailyTasksController {
    *                   type: string
    *                   example: "Daily task deleted successfully"
    *                 deletedTask:
-   *                   $ref: '#/components/schemas/DailyTask'
+   *                   $ref: '#/components/schemas/DailyTaskBase'
    *       400:
    *         description: Invalid ID or daily task not found
    *         content:
