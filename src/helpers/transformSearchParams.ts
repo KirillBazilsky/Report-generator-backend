@@ -26,7 +26,21 @@ export const transformSearchParams = <T, M extends PrismaModelName>(
         result[key as keyof T] = (value === 'true') as any
         break
       case 'date':
-        result[key as keyof T] = new Date(value) as any
+        const date = new Date(value)
+
+        if (!isNaN(date.getTime())) {
+          const year = date.getUTCFullYear()
+          const month = date.getUTCMonth()
+          const day = date.getUTCDate()
+
+          const startDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0))
+          const endDate = new Date(Date.UTC(year, month, day, 23, 59, 59, 999))
+
+          result[key as keyof T] = {
+            gte: startDate,
+            lte: endDate,
+          } as any
+        }
         break
       default:
         result[key as keyof T] = value as any

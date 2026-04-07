@@ -40,6 +40,10 @@ export class TaskController {
    *                 type: string
    *                 description: Detailed task description
    *                 example: "Add JWT validation middleware to protect routes"
+   *               startDate:
+   *                 type: string
+   *                 description: start date ISO string
+   *                 example: "2026-04-01T12:01:07.000Z"
    *     responses:
    *       200:
    *         description: Task created successfully
@@ -56,8 +60,14 @@ export class TaskController {
    */
   async create(req: Request, res: Response) {
     try {
-      const { userId, name, projectId, description } = req.body
-      const response = await this.taskService.create(userId, name, projectId, description)
+      const { userId, name, projectId, description, startDate } = req.body
+      const response = await this.taskService.create(
+        userId,
+        name,
+        projectId,
+        description,
+        startDate
+      )
 
       res.status(200).json(response)
     } catch (err) {
