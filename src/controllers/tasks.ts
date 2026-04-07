@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { TaskService } from '../services/taskService'
 import { getWithPagination } from '../helpers/getWithPagination'
 import { Task } from '@prisma/client'
@@ -58,7 +58,7 @@ export class TaskController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId, name, projectId, description, startDate } = req.body
       const response = await this.taskService.create(
@@ -71,7 +71,7 @@ export class TaskController {
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 
@@ -160,16 +160,20 @@ export class TaskController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async get(req: Request, res: Response) {
-    const { id } = req.query
+  async get(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.query
 
-    if (id) {
-      const task = await this.taskService.getTaskById(Number(id))
+      if (id) {
+        const task = await this.taskService.getTaskById(Number(id))
 
-      return res.json({ data: task })
+        return res.json({ data: task })
+      }
+
+      return getWithPagination<Task>(req, res, this.taskService.get)
+    } catch (err) {
+      next(err)
     }
-
-    return getWithPagination<Task>(req, res, this.taskService.get)
   }
 
   /**
@@ -235,14 +239,14 @@ export class TaskController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async update(req: Request, res: Response) {
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, payload } = req.body
       const response = await this.taskService.update(id, payload)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 
@@ -286,7 +290,7 @@ export class TaskController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async delete(req: Request, res: Response) {
+  async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.body
       const response = await this.taskService.delete(id)

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { ProjectService } from '../services/projectService'
 import { getWithPagination } from '../helpers/getWithPagination'
 import { Project } from '@prisma/client'
@@ -45,14 +45,14 @@ export class ProjectController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId, name } = req.body
       const user = await this.projectService.create(name, userId)
 
       res.status(200).json(user)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 
@@ -129,16 +129,20 @@ export class ProjectController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async get(req: Request, res: Response) {
-    const { id } = req.query
+  async get(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.query
 
-    if (id) {
-      const project = await this.projectService.getProjectById(Number(id))
+      if (id) {
+        const project = await this.projectService.getProjectById(Number(id))
 
-      return res.json({ data: project })
+        return res.json({ data: project })
+      }
+
+      return getWithPagination<Project>(req, res, this.projectService.get)
+    } catch (err) {
+      next(err)
     }
-
-    return getWithPagination<Project>(req, res, this.projectService.get)
   }
 
   /**
@@ -181,14 +185,14 @@ export class ProjectController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async delete(req: Request, res: Response) {
+  async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.body
       const response = await this.projectService.delete(id)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 }

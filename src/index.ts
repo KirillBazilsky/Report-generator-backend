@@ -3,6 +3,7 @@ import cors from 'cors'
 import { route } from './routes/route'
 import { specs } from './swagger'
 import swaggerUi from 'swagger-ui-express'
+import { errorHandler } from './middlewares/errorHandler'
 
 const app = express()
 
@@ -17,6 +18,7 @@ async function startBackend() {
     )
 
     app.use(route)
+    app.use(errorHandler)
 
     app.use('/swagger', swaggerUi.serve, swaggerUi.setup(specs))
 
@@ -31,6 +33,6 @@ async function startBackend() {
 
 startBackend()
 
-app.get('/health', (_req, res) => {
+app.get('/health', (_req, res, next) => {
   res.json({ status: 'ok' })
 })

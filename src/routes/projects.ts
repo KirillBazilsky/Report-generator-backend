@@ -3,10 +3,10 @@ import { projectController } from '../controllers/controllersInit'
 
 const projects = express.Router()
 
-projects.post('/', (req, res) => projectController.create(req, res))
+projects.post('/', (req, res, next) => projectController.create(req, res, next))
 
-projects.get('/', (req, res) => projectController.get(req, res))
+projects.get('/', (req, res, next) => projectController.get(req, res, next))
 
-projects.delete('/', (req, res) => projectController.delete(req, res))
+projects.delete('/', (req, res, next) => projectController.delete(req, res, next))
 
 export default projects

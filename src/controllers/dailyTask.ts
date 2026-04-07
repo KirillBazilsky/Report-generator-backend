@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { DailyTaskService } from '../services/dailyTaskService'
 import { getWithPagination } from '../helpers/getWithPagination'
 import { DailyTask } from '@prisma/client'
@@ -55,14 +55,14 @@ export class DailyTasksController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { recordId, taskId, taskData } = req.body
       const response = await this.dailyTaskService.create(recordId, taskId, taskData)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 
@@ -145,16 +145,20 @@ export class DailyTasksController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async get(req: Request, res: Response) {
-    const { id } = req.query
+  async get(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.query
 
-    if (id) {
-      const dailyTask = await this.dailyTaskService.getDailyTaskById(Number(id))
+      if (id) {
+        const dailyTask = await this.dailyTaskService.getDailyTaskById(Number(id))
 
-      return res.json({ data: dailyTask })
+        return res.json({ data: dailyTask })
+      }
+
+      return getWithPagination<DailyTask>(req, res, this.dailyTaskService.get)
+    } catch (err) {
+      next(err)
     }
-
-    return getWithPagination<DailyTask>(req, res, this.dailyTaskService.get)
   }
 
   /**
@@ -204,14 +208,14 @@ export class DailyTasksController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async update(req: Request, res: Response) {
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, payload } = req.body
       const response = await this.dailyTaskService.update(id, payload)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 
@@ -255,14 +259,14 @@ export class DailyTasksController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async delete(req: Request, res: Response) {
+  async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.body
       const response = await this.dailyTaskService.delete(id)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 }

@@ -3,12 +3,12 @@ import { dailyRecordController } from '../controllers/controllersInit'
 
 const dailyRecord = express.Router()
 
-dailyRecord.post('/', (req, res) => dailyRecordController.create(req, res))
+dailyRecord.post('/', (req, res, next) => dailyRecordController.create(req, res, next))
 
-dailyRecord.get('/', (req, res) => dailyRecordController.get(req, res))
+dailyRecord.get('/', (req, res, next) => dailyRecordController.get(req, res, next))
 
-dailyRecord.put('/', (req, res) => dailyRecordController.update(req, res))
+dailyRecord.put('/', (req, res, next) => dailyRecordController.update(req, res, next))
 
-dailyRecord.delete('/', (req, res) => dailyRecordController.delete(req, res))
+dailyRecord.delete('/', (req, res, next) => dailyRecordController.delete(req, res, next))
 
 export default dailyRecord

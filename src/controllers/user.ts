@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { UserService } from '../services/userService'
 import { getWithPagination } from '../helpers/getWithPagination'
 import { User } from '@prisma/client'
@@ -33,14 +33,14 @@ export class UserController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async create(req: Request, res: Response) {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, nickname } = req.body
       const response = await this.userService.create(email, nickname)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 
@@ -121,22 +121,26 @@ export class UserController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async get(req: Request, res: Response) {
-    const { page, pageSize, ...searchParams } = req.query
+  async get(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { page, pageSize, ...searchParams } = req.query
 
-    if (searchParams.email) {
-      const user = await this.userService.getUserByEmail(searchParams.email as string)
+      if (searchParams.email) {
+        const user = await this.userService.getUserByEmail(searchParams.email as string)
 
-       return res.json({ data: user })
+        return res.json({ data: user })
+      }
+
+      if (searchParams.id) {
+        const user = await this.userService.getUserById(Number(searchParams.id))
+
+        return res.json({ data: user })
+      }
+
+      return getWithPagination<User>(req, res, this.userService.get)
+    } catch (err) {
+      next(err)
     }
-
-    if (searchParams.id) {
-      const user = await this.userService.getUserById(Number(searchParams.id))
-
-      return res.json({ data: user })
-    }
-
-    return getWithPagination<User>(req, res, this.userService.get)
   }
 
   /**
@@ -187,14 +191,14 @@ export class UserController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async update(req: Request, res: Response) {
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, payload } = req.body
       const response = await this.userService.update(id, payload)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 
@@ -238,14 +242,14 @@ export class UserController {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  async delete(req: Request, res: Response) {
+  async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.body
       const response = await this.userService.delete(id)
 
       res.status(200).json(response)
     } catch (err) {
-      res.status(400).json({ error: err })
+      next(err)
     }
   }
 }

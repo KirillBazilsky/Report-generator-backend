@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { UserService } from '../services/userService'
 
 export class AuthController {
@@ -53,7 +53,7 @@ export class AuthController {
    *             example:
    *               error: "Internal server error"
    */
-  async auth(req: Request, res: Response) {
+  async auth(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.params
       const user = await this.userService.getUserByEmail(email)
@@ -64,9 +64,7 @@ export class AuthController {
 
       res.status(200).json(user.id)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Internal server error'
-      const statusCode = errorMessage === 'User not found' ? 400 : 500
-      res.status(statusCode).json({ error: errorMessage })
+      next(err)
     }
   }
 }

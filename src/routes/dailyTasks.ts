@@ -3,12 +3,12 @@ import { dailyTaskController } from '../controllers/controllersInit'
 
 const dailyTasks = express.Router()
 
-dailyTasks.post('/', (req, res) => dailyTaskController.create(req, res))
+dailyTasks.post('/', (req, res, next) => dailyTaskController.create(req, res, next))
 
-dailyTasks.get('/', (req, res) => dailyTaskController.get(req, res))
+dailyTasks.get('/', (req, res, next) => dailyTaskController.get(req, res, next))
 
-dailyTasks.put('/', (req, res) => dailyTaskController.update(req, res))
+dailyTasks.put('/', (req, res, next) => dailyTaskController.update(req, res, next))
 
-dailyTasks.delete('/', (req, res) => dailyTaskController.delete(req, res))
+dailyTasks.delete('/', (req, res, next) => dailyTaskController.delete(req, res, next))
 
 export default dailyTasks
