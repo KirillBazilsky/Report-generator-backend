@@ -9,70 +9,35 @@ export class DailyRecordController {
   /**
    * @swagger
    * /daily-records:
-   *   get:
-   *     summary: Get daily records with filtering or pagination
+   *   post:
+   *     summary: Create a new daily record entry
    *     description: |
-   *       Returns daily records based on query parameters.
-   *       - If `id` is provided, returns a single daily record object.
-   *       - Otherwise, returns a paginated list of daily records.
+   *       Returns new daily record
    *     tags: [Daily Records]
-   *     parameters:
-   *       - in: query
-   *         name: page
-   *         schema:
-   *           type: integer
-   *           minimum: 1
-   *           default: 1
-   *         description: Page number
-   *         example: 1
-   *       - in: query
-   *         name: pageSize
-   *         schema:
-   *           type: integer
-   *           minimum: 1
-   *           maximum: 100
-   *           default: 10
-   *         description: Number of items per page
-   *         example: 10
-   *       - in: query
-   *         name: id
-   *         schema:
-   *           type: integer
-   *         description: Get daily record by exact ID (overrides pagination)
-   *         example: 1
-   *       - in: query
-   *         name: userId
-   *         schema:
-   *           type: integer
-   *         description: Filter by user ID
-   *         example: 5
-   *       - in: query
-   *         name: date
-   *         schema:
-   *           type: string
-   *           format: date
-   *         description: Filter by specific date
-   *         example: "2024-03-30"
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - userId
+   *             properties:
+   *               userId:
+   *                 type: integer
+   *                 description: ID of the user
+   *                 example: 10
+   *               date:
+   *                 type: string
+   *                 description: ISO string of the record date
+   *                 example: 2024-03-30
    *     responses:
    *       200:
    *         description: Successful response
    *         content:
    *           application/json:
    *             schema:
-   *               oneOf:
-   *                 - type: object
-   *                   properties:
-   *                     data:
-   *                       $ref: '#/components/schemas/DailyRecordFull'
-   *                 - type: object
-   *                   properties:
-   *                     data:
-   *                       type: array
-   *                       items:
-   *                         $ref: '#/components/schemas/DailyRecordBase'
-   *                     total:
-   *                       type: integer
-   *                       example: 42
+   *               $ref: '#/components/schemas/DailyRecordFull'
    *       400:
    *         description: Invalid query parameters
    *         content:
@@ -83,7 +48,7 @@ export class DailyRecordController {
   async create(req: Request, res: Response) {
     try {
       const { userId, date } = req.body
-      const record = await this.dailyRecordService.create(userId)
+      const record = await this.dailyRecordService.create(userId, date)
 
       res.status(200).json(record)
     } catch (err) {

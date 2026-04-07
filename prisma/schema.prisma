@@ -55,6 +55,8 @@ model DailyRecord {
   userId    Int
   dailyTasks DailyTask[]
   projects  Project[]
+
+  @@unique([userId, date]) 
 }
 
 model DailyTask {

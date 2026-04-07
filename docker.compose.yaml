@@ -29,5 +29,18 @@ services:
     ports:
       - "${BACKEND_PORT}:3000"
 
+  migrate:
+    build: ./
+    container_name: migrate_app_1
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    command: ["sh", "-c", "npx prisma migrate deploy"]
+    restart: "no"
+    profiles:
+      - migration
+
 volumes:
   postgres_data:

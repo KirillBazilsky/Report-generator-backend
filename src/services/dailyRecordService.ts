@@ -7,14 +7,26 @@ import { baseDailyRecordSelector, baseUserSelector, fullDailyRecordSelector, idS
 
 export class DailyRecordService {
   async create(userId: number, date?: string) {
+    const normalizedDate = this.normalizeToUTCDate(date ? new Date(date) : new Date())
+
+    const existingRecord = await prisma.dailyRecord.findUnique({
+      where: {
+        userId_date: {
+          userId: userId,
+          date: normalizedDate,
+        },
+      },
+    })
+
+    if (existingRecord) {
+      const dateStr = normalizedDate.toISOString().split('T')[0]
+      throw new Error(`Daily record for date ${dateStr} already exists`)
+    }
+
     return await prisma.dailyRecord.create({
       data: {
-        date: new Date(date ?? Date.now()),
-        user: {
-          connect: {
-            id: userId,
-          },
-        },
+        date: normalizedDate,
+        userId: userId,
       },
     })
   }
@@ -64,5 +76,11 @@ export class DailyRecordService {
     return prisma.dailyRecord.delete({
       where: { id },
     })
+  }
+
+  private normalizeToUTCDate(date: Date): Date {
+    return new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0)
+    )
   }
 }

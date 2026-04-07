@@ -4,7 +4,13 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:docker": "docker-compose run --rm migrate",
+    "docker:up": "docker-compose up -d",
+    "docker:up-with-migration": "docker-compose up -d migrate && docker-compose up -d backend",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.1",
