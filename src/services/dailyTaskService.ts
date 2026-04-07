@@ -53,7 +53,7 @@ export class DailyTaskService {
       ? transformSearchParams<DailyTask, 'DailyTask'>(payload.searchParams, 'DailyTask')
       : {}
 
-    const total = await prisma.dailyTask.count()
+    const total = await prisma.dailyTask.count({ where })
 
     const data = await prisma.dailyTask.findMany({
       where,

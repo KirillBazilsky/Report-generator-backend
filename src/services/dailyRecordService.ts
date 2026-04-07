@@ -38,7 +38,7 @@ export class DailyRecordService {
       ? transformSearchParams<DailyRecord, 'DailyRecord'>(payload.searchParams, 'DailyRecord')
       : {}
 
-    const total = await prisma.dailyRecord.count()
+    const total = await prisma.dailyRecord.count({ where })
 
     const data = await prisma.dailyRecord.findMany({
       where,

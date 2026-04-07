@@ -64,7 +64,7 @@ export class TaskService {
       ? transformSearchParams<Task, 'Task'>(payload.searchParams, 'Task')
       : {}
 
-    const total = await prisma.task.count()
+    const total = await prisma.task.count({ where })
 
     const data = await prisma.task.findMany({
       where,

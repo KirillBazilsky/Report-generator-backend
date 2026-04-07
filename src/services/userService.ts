@@ -36,7 +36,7 @@ export class UserService {
 
     const { skip, take } = calculatePagination(payload.pagination)
 
-    const total = await prisma.user.count()
+    const total = await prisma.user.count({ where })
 
     const data = await prisma.user.findMany({
       where,

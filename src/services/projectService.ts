@@ -29,7 +29,7 @@ export class ProjectService {
       ? transformSearchParams<Project, 'Project'>(payload.searchParams, 'Project')
       : {}
 
-    const total = await prisma.project.count()
+    const total = await prisma.project.count({ where })
 
     const data = await prisma.project.findMany({
       where,
