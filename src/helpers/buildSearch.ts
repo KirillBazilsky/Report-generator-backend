@@ -1,33 +1,17 @@
-import { Prisma } from '@prisma/client'
-
-type WhereInput = Prisma.ProjectWhereInput
-
-export const buildSearch = <W extends WhereInput>(
+export const buildSearch = <T>(
   searchParams?: Record<string, string | undefined>,
-  fields: readonly string[] = []
-): Partial<W> => {
+  fields: string[] = []
+) => {
   const search = searchParams?.search
 
-  if (!search || fields.length === 0) {
-    return {}
-  }
+  if (!search || !fields.length) return {}
 
-  const OR: WhereInput[] = fields.map((field) => {
-    const parts = field.split('.')
-
-    const leaf = {
+  const OR = fields.filter(Boolean).map((field) => ({
+    [field]: {
       contains: search,
       mode: 'insensitive',
-    } satisfies Prisma.StringFilter
+    },
+  }))
 
-    return parts.reduceRight((acc, key) => {
-      return {
-        [key]: acc,
-      } as WhereInput
-    }, leaf as any)
-  })
-
-  return {
-    OR,
-  } as Partial<W>
+  return OR.length ? { OR } : {} 
 }

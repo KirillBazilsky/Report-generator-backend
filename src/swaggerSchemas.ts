@@ -237,23 +237,24 @@
  * 
  *     # DailyRecord full model
  *     DailyRecordFull:
- *       allOff: '#/components/schemas/DailyRecordBase'
- *       type: object
- *       properties:
- *         dailyTasks:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/DailyTaskBase'
- *           description: Tasks logged for this day
- *         projects:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/ProjectBase'
- *           description: Projects worked on this day
- *       required:
- *         - id
- *         - date
- *         - userId
+ *       allOf: 
+ *         - $ref: '#/components/schemas/DailyRecordBase'
+ *         - type: object
+ *           properties:
+ *             dailyTasks:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/DailyTaskBase'
+ *               description: Tasks logged for this day
+ *             projects:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ProjectBase'
+ *               description: Projects worked on this day
+ *           required:
+ *             - id
+ *             - date
+ *             - userId
  * 
  *     # DailyTask base model
  *     DailyTaskBase:

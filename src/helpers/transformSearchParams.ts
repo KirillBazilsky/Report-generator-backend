@@ -12,12 +12,14 @@ export const transformSearchParams = <T, M extends PrismaModelName>(
   modelName: M
 ): Partial<T> => {
   const result: Partial<T> = {}
+
+  const {search, ...params} = searchParams
   
-  Object.entries(searchParams).forEach(([key, value]) => {
+  Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return
-    
+
     const fieldType = getFieldType(modelName, key)
-    
+
     switch (fieldType) {
       case 'number':
         result[key as keyof T] = Number(value) as any

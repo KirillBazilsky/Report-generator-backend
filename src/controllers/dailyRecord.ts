@@ -122,7 +122,8 @@ export class DailyRecordController {
    *                  # Case 1: Single daily record (by id)
    *                  - type: object
    *                    properties:
-   *                      data: '#/components/schemas/DailyRecordFull'
+   *                      data: 
+   *                        $ref: '#/components/schemas/DailyRecordFull'
    *                  # Case 2: Paginated list
    *                  - type: object
    *                    properties:
