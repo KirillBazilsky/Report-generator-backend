@@ -133,6 +133,21 @@ export class TaskController {
    *           type: string
    *         description: Filter by task name (partial match)
    *         example: "authentication"
+   *       - in: query
+   *         name: sortBy
+   *         schema:
+   *           type: string
+   *           enum: [id, name, description, status, startDate, endDate, projectId, userId]
+   *       - in: query
+   *         name: sortOrder
+   *         schema:
+   *           type: string
+   *           enum: [asc, desc]
+   *       - in: query
+   *         name: search
+   *         description: global search by name and description
+   *         schema:
+   *           type: string
    *     responses:
    *       200:
    *         description: Successful response

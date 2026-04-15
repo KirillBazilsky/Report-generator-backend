@@ -4,6 +4,7 @@ import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
 import { baseDailyRecordSelector, baseUserSelector, fullDailyRecordSelector, idSelector } from '../helpers/prismaSelectors'
+import { getSortParams } from '../helpers/getSortParams'
 
 export class DailyRecordService {
   async create(userId: number, date?: string) {
@@ -52,11 +53,14 @@ export class DailyRecordService {
 
     const total = await prisma.dailyRecord.count({ where })
 
+    const orderBy = getSortParams(payload.searchParams)
+
     const data = await prisma.dailyRecord.findMany({
       where,
       select: baseDailyRecordSelector,
       skip,
       take,
+      orderBy,
     })
 
     return {

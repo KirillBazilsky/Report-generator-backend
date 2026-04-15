@@ -118,6 +118,21 @@ export class DailyTasksController {
    *           $ref: '#/components/schemas/TaskStatus'
    *         description: Filter by task status
    *         example: "IN_PROGRESS"
+   *       - in: query
+   *         name: sortBy
+   *         schema:
+   *           type: string
+   *           enum: [id, status, dailyRecordId, taskId, comment]
+   *       - in: query
+   *         name: sortOrder
+   *         schema:
+   *           type: string
+   *           enum: [asc, desc]
+   *       - in: query
+   *         name: search
+   *         description: global search by comment
+   *         schema:
+   *           type: string
    *     responses:
    *       200:
    *         description: Successful response

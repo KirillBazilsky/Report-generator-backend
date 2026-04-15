@@ -3,7 +3,10 @@ import { prisma } from '../prisma'
 import { TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
-import { baseTaskSelector, fullTaskSelector, idSelector, nameSelector, nickNameSelector } from '../helpers/prismaSelectors'
+import { baseTaskSelector, fullTaskSelector } from '../helpers/prismaSelectors'
+import { getSortParams } from '../helpers/getSortParams'
+import { buildSearch } from '../helpers/buildSearch'
+import { buildWhere } from '../helpers/buildWhere'
 
 export class TaskService {
   async create(
@@ -60,17 +63,22 @@ export class TaskService {
   }): Promise<TWithPaginationResponse<Task[]>> {
     const { skip, take } = calculatePagination(payload.pagination)
 
-    const where = payload.searchParams
+    const filters = payload.searchParams
       ? transformSearchParams<Task, 'Task'>(payload.searchParams, 'Task')
       : {}
+    const search = buildSearch<Task>(payload.searchParams, ["name", "description"])
+    const where = buildWhere<Task>(filters, search)
 
     const total = await prisma.task.count({ where })
+
+    const orderBy = getSortParams(payload.searchParams)
 
     const data = await prisma.task.findMany({
       where,
       select: baseTaskSelector,
       skip,
       take,
+      orderBy,
     })
 
     return {

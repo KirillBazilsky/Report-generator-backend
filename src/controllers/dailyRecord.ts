@@ -102,6 +102,16 @@ export class DailyRecordController {
    *           format: date
    *         description: Filter by specific date
    *         example: "2024-03-30"
+   *       - in: query
+   *         name: sortBy
+   *         schema:
+   *           type: string
+   *           enum: [id, date, userId]
+   *       - in: query
+   *         name: sortOrder
+   *         schema:
+   *           type: string
+   *           enum: [asc, desc]
    *     responses:
    *       200:
    *         description: Paginated list of daily records

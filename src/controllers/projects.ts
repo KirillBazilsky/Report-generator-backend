@@ -102,6 +102,21 @@ export class ProjectController {
    *           type: string
    *         description: Filter by project name (partial match)
    *         example: "E-commerce"
+   *       - in: query
+   *         name: sortBy
+   *         schema:
+   *           type: string
+   *           enum: [id, name, userId]
+   *       - in: query
+   *         name: sortOrder
+   *         schema:
+   *           type: string
+   *           enum: [asc, desc]
+   *       - in: query
+   *         name: search
+   *         description: global search by name
+   *         schema:
+   *           type: string
    *     responses:
    *       200:
    *         description: Successful response

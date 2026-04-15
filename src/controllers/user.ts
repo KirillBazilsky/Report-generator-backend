@@ -92,6 +92,21 @@ export class UserController {
    *           type: string
    *         description: Filter by nickname (partial match)
    *         example: "john"
+   *       - in: query
+   *         name: sortBy
+   *         schema:
+   *           type: string
+   *           enum: [id, email, nickname]
+   *       - in: query
+   *         name: sortOrder
+   *         schema:
+   *           type: string
+   *           enum: [asc, desc]
+   *       - in: query
+   *         name: search
+   *         description: global search by nickname
+   *         schema:
+   *           type: string
    *     responses:
    *       200:
    *         description: Paginated list of users
