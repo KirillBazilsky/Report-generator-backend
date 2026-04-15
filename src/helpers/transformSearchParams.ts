@@ -13,7 +13,7 @@ export const transformSearchParams = <T, M extends PrismaModelName>(
 ): Partial<T> => {
   const result: Partial<T> = {}
 
-  const {search, ...params} = searchParams
+  const {search,sortBy, sortOrder, ...params} = searchParams
   
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return
