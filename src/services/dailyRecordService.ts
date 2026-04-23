@@ -29,6 +29,11 @@ export class DailyRecordService {
         date: normalizedDate,
         userId: userId,
       },
+      include: {
+        user: true,
+        dailyTasks: true,
+        projects: true,
+      }
     })
   }
 
