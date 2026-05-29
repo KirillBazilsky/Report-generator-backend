@@ -1,19 +1,23 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser' 
 import { route } from './routes/route'
 import { specs } from './swagger'
 import swaggerUi from 'swagger-ui-express'
 import { errorHandler } from './middlewares/errorHandler'
+import { checkAuth } from './middlewares/authChecker'
 
 const app = express()
 
 async function startBackend() {
   try {
     app.use(express.json())
+    app.use(cookieParser())
 
     app.use(
       cors({
         origin: process.env.CLIENT_ORIGIN,
+        credentials: true,
       })
     )
 
