@@ -12,7 +12,7 @@ export interface AuthRequest extends Request {
 
 export const checkAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.authToken
+    const token = req.cookies?.accessToken
 
     if (!token) {
       return res.status(401).json({ message: 'Not authenticated' })
