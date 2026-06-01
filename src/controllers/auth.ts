@@ -4,8 +4,9 @@ import jwt from 'jsonwebtoken'
 import { userService } from '../services/servicesInit'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'dev-refresh-secret-key-change-in-production'
-const ACCESS_TOKEN_EXPIRY = '60m' 
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_TOKEN_SECRET || 'dev-refresh-secret-key-change-in-production'
+const ACCESS_TOKEN_EXPIRY = '60m'
 const REFRESH_TOKEN_EXPIRY = '7d'
 
 export class AuthController {
@@ -102,7 +103,7 @@ export class AuthController {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: '/api/auth/refresh',
+        path: '/auth/refresh',
       })
 
       res.status(200).json(user.id)
@@ -117,10 +118,10 @@ export class AuthController {
    *   post:
    *     summary: Refresh auth token
    *     tags: [Authentication]
-   *     
+   *
    *     responses:
    *       200:
-   *         description: Successfully authenticated 
+   *         description: Successfully authenticated
    *       400:
    *         description: Bad request - user not found or invalid refresh token
    *         content:
@@ -137,11 +138,13 @@ export class AuthController {
    *               error: "Internal server error"
    */
   async refreshTokens(req: Request, res: Response, next: NextFunction) {
+    console.log('refresh start')
     try {
       const refreshToken = req.cookies?.refreshToken
 
+
       if (!refreshToken) {
-        return res.status(401).json({ message: 'Refresh token not found' })
+        throw new Error('Refresh token not found')
       }
 
       const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as {
@@ -151,12 +154,13 @@ export class AuthController {
       }
 
       if (decoded.type !== 'refresh') {
-        return res.status(401).json({ message: 'Invalid token type' })
+        throw new Error('Invalid token type')
       }
 
       const user = await this.userService.getUserById(decoded.id)
+      console.log('USER:', user)
       if (!user) {
-        return res.status(401).json({ message: 'User not found' })
+        throw new Error('User not found')
       }
 
       const { accessToken, refreshToken: newRefreshToken } = this.generateTokens({
@@ -177,7 +181,7 @@ export class AuthController {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: '/api/auth/refresh',
+        path: '/auth/refresh',
       })
 
       res.status(200).json({ message: 'Tokens refreshed successfully' })
@@ -226,7 +230,7 @@ export class AuthController {
    */
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      res.clearCookie('authToken', {
+      res.clearCookie('accessToken', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -278,7 +282,7 @@ export class AuthController {
       const token = req.cookies?.accessToken
 
       if (!token) {
-        return res.status(401).json({ message: 'Not authenticated' })
+        throw new Error('Not authenticated')
       }
 
       const response = jwt.verify(token, JWT_SECRET) as { id: number; email: string }
