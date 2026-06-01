@@ -138,7 +138,6 @@ export class AuthController {
    *               error: "Internal server error"
    */
   async refreshTokens(req: Request, res: Response, next: NextFunction) {
-    console.log('refresh start')
     try {
       const refreshToken = req.cookies?.refreshToken
 
@@ -158,7 +157,6 @@ export class AuthController {
       }
 
       const user = await this.userService.getUserById(decoded.id)
-      console.log('USER:', user)
       if (!user) {
         throw new Error('User not found')
       }
