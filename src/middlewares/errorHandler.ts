@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { Prisma } from '@prisma/client'
 import { AppError } from '../errors/AppError'
+import jwt from 'jsonwebtoken'
+
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -25,19 +27,26 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
     }
   }
 
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      error: err.message,
-      code: err.code,
-    })
-  }
-
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Validation failed',
       details: err.message,
     })
   }
+
+  if (err instanceof AppError) {
+
+    if (err.code === "REFRESH_TOKEN_ERROR") {
+      res.clearCookie('refreshToken')
+      return res.status(401).json({ message: 'Refresh token expired, invalid or missing, please login again' })
+    }
+
+      return res.status(err.statusCode).json({
+        error: err.message,
+        code: err.code,
+      })
+  }
+
 
   if (err instanceof SyntaxError && 'body' in err) {
     return res.status(400).json({

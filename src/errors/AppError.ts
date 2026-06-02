@@ -34,3 +34,9 @@ export class ValidationError extends AppError {
     super(message, 400, 'VALIDATION_ERROR')
   }
 }
+
+export class RefreshTokenError extends AppError {
+  constructor(message: string) {
+    super(message, 401, 'REFRESH_TOKEN_ERROR')
+  }
+}

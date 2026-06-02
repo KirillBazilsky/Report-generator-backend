@@ -22,6 +22,7 @@ export const baseUserSelector = {
   id: true,
   email: true,
   nickname: true,
+  role: true,
   dailyRecords: idSelector,
   projects: idSelector,
   tasks: idSelector,

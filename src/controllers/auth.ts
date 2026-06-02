@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express'
 import { UserService } from '../services/userService'
 import jwt from 'jsonwebtoken'
 import { userService } from '../services/servicesInit'
+import { NotFoundError, RefreshTokenError } from '../errors/AppError'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
 const REFRESH_TOKEN_SECRET =
@@ -141,9 +142,8 @@ export class AuthController {
     try {
       const refreshToken = req.cookies?.refreshToken
 
-
       if (!refreshToken) {
-        throw new Error('Refresh token not found')
+        throw new RefreshTokenError('Refresh token not found')
       }
 
       const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as {
@@ -153,12 +153,12 @@ export class AuthController {
       }
 
       if (decoded.type !== 'refresh') {
-        throw new Error('Invalid token type')
+        throw new RefreshTokenError('Invalid token type')
       }
 
       const user = await this.userService.getUserById(decoded.id)
       if (!user) {
-        throw new Error('User not found')
+        throw new NotFoundError('User not found')
       }
 
       const { accessToken, refreshToken: newRefreshToken } = this.generateTokens({
@@ -184,13 +184,6 @@ export class AuthController {
 
       res.status(200).json({ message: 'Tokens refreshed successfully' })
     } catch (err) {
-      if (err instanceof jwt.TokenExpiredError) {
-        res.clearCookie('refreshToken')
-        return res.status(401).json({ message: 'Refresh token expired, please login again' })
-      }
-      if (err instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json({ message: 'Invalid refresh token' })
-      }
       next(err)
     }
   }
@@ -234,6 +227,14 @@ export class AuthController {
         sameSite: 'lax',
         path: '/',
       })
+
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/auth/refresh',
+      })
+
       res.status(200).json({ message: 'Logged out successfully' })
     } catch (err) {
       next(err)
