@@ -32,7 +32,7 @@ export class UserService {
   async get(payload: {
     searchParams?: Record<string, string | undefined>
     pagination?: TPaginationProps
-  }): Promise<TWithPaginationResponse<User[]>> {
+  }): Promise<TWithPaginationResponse<Omit<User, 'otp'>[]>> {
     const filters = payload.searchParams
       ? transformSearchParams<User, 'User'>(payload.searchParams, 'User')
       : {}
@@ -62,9 +62,9 @@ export class UserService {
   async update(
     id: number,
     payload: Partial<Omit<User, 'id'>> & {
-      projects: TConnect[]
-      tasks: TConnect[]
-      dailyRecords: TConnect[]
+      projects?: TConnect[]
+      tasks?: TConnect[]
+      dailyRecords?: TConnect[]
     }
   ) {
     const { projects, tasks, dailyRecords, ...data } = payload
@@ -88,5 +88,14 @@ export class UserService {
         id,
       },
     })
+  }
+
+  async getOtp(email: string) {
+    const user  = await prisma.user.findUnique({
+      where: { email },
+      select: { otp: true },
+    })
+
+    return user?.otp
   }
 }

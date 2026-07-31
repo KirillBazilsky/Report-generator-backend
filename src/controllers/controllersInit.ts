@@ -1,4 +1,5 @@
 import {
+    authService,
     dailyRecordService,
     dailyTaskService,
     projectService,
@@ -12,7 +13,7 @@ import { ProjectController } from './projects'
 import { TaskController } from './tasks'
 import { UserController } from './user'
 
-export const authController = new AuthController(userService)
+export const authController = new AuthController(userService, authService)
 export const userController = new UserController(userService)
 export const projectController = new ProjectController(projectService)
 export const taskController = new TaskController(taskService)

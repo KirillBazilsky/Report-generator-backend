@@ -22,6 +22,7 @@ model User {
   tasks    Task[]
   dailyRecords DailyRecord[]
   role     Role      @default(user)
+  otp      String?
 }
 
 model Project {

@@ -3,6 +3,7 @@ import { UserService } from '../services/userService'
 import jwt from 'jsonwebtoken'
 import { userService } from '../services/servicesInit'
 import { NotFoundError, RefreshTokenError } from '../errors/AppError'
+import { AuthService } from '../services/authService'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production'
 const REFRESH_TOKEN_SECRET =
@@ -11,21 +12,7 @@ const ACCESS_TOKEN_EXPIRY = '60m'
 const REFRESH_TOKEN_EXPIRY = '7d'
 
 export class AuthController {
-  constructor(readonly userService: UserService) {}
-
-  private generateTokens(user: { id: number; email: string }) {
-    const accessToken = jwt.sign({ id: user.id, email: user.email, type: 'access' }, JWT_SECRET, {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
-    })
-
-    const refreshToken = jwt.sign(
-      { id: user.id, email: user.email, type: 'refresh' },
-      REFRESH_TOKEN_SECRET,
-      { expiresIn: REFRESH_TOKEN_EXPIRY }
-    )
-
-    return { accessToken, refreshToken }
-  }
+  constructor(readonly userService: UserService, readonly authService: AuthService) {}
 
   /**
    * @swagger
@@ -79,14 +66,114 @@ export class AuthController {
   async auth(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.params
+      await this.authService.sendOtp(email)
+
+      res.status(200).json(`OTP has been sended to ${email}`)
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  /**
+   * @swagger
+   * /auth/otp:
+   *   post:
+   *     summary: Authenticate user by OTP
+   *     description: Verifies user's email and one-time password and returns user ID.
+   *     tags:
+   *       - Authentication
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *               - otp
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 description: User's email address
+   *                 example: john.doe@example.com
+   *               otp:
+   *                 type: string
+   *                 description: One time password
+   *                 example: "5421"
+   *     responses:
+   *       200:
+   *         description: Successfully authenticated - returns user ID
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: integer
+   *             example: 123
+   *       401:
+   *         description: Invalid or expired OTP
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *             examples:
+   *               invalidOTP:
+   *                 summary: Invalid OTP
+   *                 value:
+   *                   error: "Invalid OTP"
+   *               expiredOTP:
+   *                 summary: OTP expired
+   *                 value:
+   *                   error: "OTP expired"
+   *       404:
+   *         description: User not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *             example:
+   *               error: "User not found"
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *             example:
+   *               error: "Internal server error"
+   */
+  async OTPVerify(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, otp } = req.body
+
       const user = await this.userService.getUserByEmail(email)
 
       if (!user) {
-        res.status(404).json({ message: 'User not found' })
-        throw new Error('User not found')
+        return res.status(404).json({
+          message: 'User not found',
+        })
       }
 
-      const { accessToken, refreshToken } = this.generateTokens({
+      const dbOtp = await this.userService.getOtp(email)
+
+      const isTestOtp = process.env.NODE_ENV !== 'production' && otp === process.env.TEST_OTP
+
+      if (!dbOtp && !isTestOtp) {
+        return res.status(401).json({
+          message: 'OTP expired',
+        })
+      }
+
+      if (otp !== dbOtp && !isTestOtp) {
+        return res.status(401).json({
+          message: 'Invalid OTP',
+        })
+      }
+
+      await this.userService.update(user.id, {
+        otp: null,
+      })
+
+      const { accessToken, refreshToken } = this.authService.generateTokens({
         id: user.id,
         email: user.email,
       })
@@ -107,7 +194,7 @@ export class AuthController {
         path: '/auth/refresh',
       })
 
-      res.status(200).json(user.id)
+      return res.status(200).json(user.id)
     } catch (err) {
       next(err)
     }
@@ -161,7 +248,7 @@ export class AuthController {
         throw new NotFoundError('User not found')
       }
 
-      const { accessToken, refreshToken: newRefreshToken } = this.generateTokens({
+      const { accessToken, refreshToken: newRefreshToken } = this.authService.generateTokens({
         id: user.id,
         email: user.email,
       })

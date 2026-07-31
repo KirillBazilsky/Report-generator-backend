@@ -152,7 +152,7 @@ export class UserController {
         return res.json({ data: user })
       }
 
-      return getWithPagination<User>(req, res, this.userService.get)
+      return getWithPagination<Omit<User, "otp">>(req, res, this.userService.get)
     } catch (err) {
       next(err)
     }
