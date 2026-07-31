@@ -1,5 +1,7 @@
+import { TransformResult } from './transformSearchParams'
+
 export const buildWhere = <T>(
-  filters: Partial<T>,
+  filters: TransformResult<T>,
   search:
     | {
         OR?: undefined
@@ -14,9 +16,18 @@ export const buildWhere = <T>(
 ) => {
   const AND = []
 
-  if (filters && Object.keys(filters).length) AND.push(filters)
+  if (filters?.ids?.length) {
+    AND.push({
+      id: {
+        in: filters.ids,
+      },
+    })
+  }
+
+  const { ids, ...otherFilters } = filters
+
+  if (filters && Object.keys(otherFilters).length) AND.push(otherFilters)
   if (search && Object.keys(search).length) AND.push(search)
 
   return AND.length ? { AND } : {}
 }
-

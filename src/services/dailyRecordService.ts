@@ -1,9 +1,11 @@
 import { DailyRecord } from '@prisma/client'
 import { prisma } from '../prisma'
-import { TPaginationProps, TWithPaginationResponse } from '../types/common'
+import { TConnect, TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
-import { baseDailyRecordSelector, baseUserSelector, fullDailyRecordSelector, idSelector } from '../helpers/prismaSelectors'
+import {
+  baseDailyRecordSelector, fullDailyRecordSelector
+} from '../helpers/prismaSelectors'
 import { getSortParams } from '../helpers/getSortParams'
 
 export class DailyRecordService {
@@ -33,16 +35,27 @@ export class DailyRecordService {
         user: true,
         dailyTasks: true,
         projects: true,
-      }
+      },
     })
   }
 
-  async update(id: number, payload: Partial<DailyRecord>) {
+  async update(
+    id: number,
+    payload: Partial<DailyRecord & { projects: TConnect[]; dailyTasks: TConnect[] }>
+  ) {
+    const { projects, dailyTasks, userId, ...data } = payload
+
     return await prisma.dailyRecord.update({
       where: {
         id,
       },
-      data: payload,
+      data: {
+        ...data,
+        ...(projects && { projects: { set: projects.map((project) => ({ id: project.id })) } }),
+        ...(dailyTasks && {
+          dailyTasks: { set: dailyTasks.map((dailyTask) => ({ id: dailyTask.id })) },
+        }),
+      },
     })
   }
 
@@ -82,6 +95,10 @@ export class DailyRecordService {
   }
 
   async delete(id: number) {
+    await prisma.dailyTask.deleteMany({
+      where: {dailyRecordId: id}
+    })
+
     return prisma.dailyRecord.delete({
       where: { id },
     })

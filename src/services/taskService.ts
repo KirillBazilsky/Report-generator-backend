@@ -1,6 +1,6 @@
 import { Task } from '@prisma/client'
 import { prisma } from '../prisma'
-import { TPaginationProps, TWithPaginationResponse } from '../types/common'
+import { TConnect, TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
 import { baseTaskSelector, fullTaskSelector } from '../helpers/prismaSelectors'
@@ -35,8 +35,15 @@ export class TaskService {
     })
   }
 
-  async update(id: number, payload: Partial<Task>) {
+  async update(
+    id: number,
+    payload: Partial<
+      Omit<Task, 'id'> & { projectId: number; userId: number; dailyTasks: TConnect[] }
+    >
+  ) {
     const isTaskEnded = payload.status === 'DONE' || payload.status === 'CLOSED'
+
+    const { projectId, userId, dailyTasks, ...data } = payload
 
     if (isTaskEnded) {
       prisma.task.update({
@@ -53,7 +60,14 @@ export class TaskService {
       where: {
         id: id,
       },
-      data: payload,
+      data: {
+        ...data,
+        ...(projectId && { project: { connect: { id: projectId } } }),
+        ...(userId && { user: { connect: { id: userId } } }),
+        ...(dailyTasks && {
+          dailyTasks: { set: dailyTasks.map((dailyTask) => ({ id: dailyTask.id })) },
+        }),
+      },
     })
   }
 
@@ -66,7 +80,7 @@ export class TaskService {
     const filters = payload.searchParams
       ? transformSearchParams<Task, 'Task'>(payload.searchParams, 'Task')
       : {}
-    const search = buildSearch<Task>(payload.searchParams, ["name", "description"])
+    const search = buildSearch<Task>(payload.searchParams, ['name', 'description'])
     const where = buildWhere<Task>(filters, search)
 
     const total = await prisma.task.count({ where })

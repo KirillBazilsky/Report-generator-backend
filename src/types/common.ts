@@ -7,3 +7,5 @@ export type TWithPaginationResponse<T> = {
     data: T;
     total: number
 }
+
+export type TConnect = { id: number }

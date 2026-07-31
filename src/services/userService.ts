@@ -1,6 +1,6 @@
 import { User } from '@prisma/client'
 import { prisma } from '../prisma'
-import { TPaginationProps, TWithPaginationResponse } from '../types/common'
+import { TConnect, TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
 import { baseUserSelector, fullUserSelector } from '../helpers/prismaSelectors'
@@ -42,7 +42,7 @@ export class UserService {
     const { skip, take } = calculatePagination(payload.pagination)
 
     const total = await prisma.user.count({ where })
-    
+
     const orderBy = getSortParams(payload.searchParams)
 
     const data = await prisma.user.findMany({
@@ -59,10 +59,26 @@ export class UserService {
     }
   }
 
-  async update(id: number, payload: Partial<User>) {
+  async update(
+    id: number,
+    payload: Partial<Omit<User, 'id'>> & {
+      projects: TConnect[]
+      tasks: TConnect[]
+      dailyRecords: TConnect[]
+    }
+  ) {
+    const { projects, tasks, dailyRecords, ...data } = payload
+
     return prisma.user.update({
       where: { id },
-      data: payload,
+      data: {
+        ...data,
+        ...(projects && { projects: { set: projects.map((project) => ({ id: project.id })) } }),
+        ...(tasks && { tasks: { set: tasks.map((task) => ({ id: task.id })) } }),
+        ...(dailyRecords && {
+          dailyRecords: { set: dailyRecords.map((dailyRecord) => ({ id: dailyRecord.id })) },
+        }),
+      },
     })
   }
 

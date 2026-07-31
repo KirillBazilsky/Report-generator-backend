@@ -7,6 +7,7 @@ import { baseDailyTaskSelector } from '../helpers/prismaSelectors'
 import { getSortParams } from '../helpers/getSortParams'
 import { buildSearch } from '../helpers/buildSearch'
 import { buildWhere } from '../helpers/buildWhere'
+import { connect } from 'http2'
 
 export class DailyTaskService {
   async create(recordId: number, taskId: number, taskData: Partial<DailyTask>) {
@@ -29,12 +30,21 @@ export class DailyTaskService {
     })
   }
 
-  async update(id: number, payload: Partial<DailyTask>) {
+  async update(
+    id: number,
+    payload: Partial<Omit<DailyTask, 'id'> & { taskId?: number; dailyRecordId?: number }>
+  ) {
+    const { taskId, dailyRecordId, ...data } = payload
+
     return prisma.dailyTask.update({
       where: {
         id,
       },
-      data: payload,
+      data: {
+        ...data,
+        ...(taskId && { task: { connect: { id: taskId } } }),
+        ...(dailyRecordId && { dailyRecord: { connect: { id: dailyRecordId } } }),
+      },
     })
   }
 
@@ -55,8 +65,8 @@ export class DailyTaskService {
     const filters = payload.searchParams
       ? transformSearchParams<DailyTask, 'DailyTask'>(payload.searchParams, 'DailyTask')
       : {}
-    const search = buildSearch<DailyTask>(payload.searchParams, ["comment"])
-    const where = buildWhere<DailyTask>(filters, search)  
+    const search = buildSearch<DailyTask>(payload.searchParams, ['comment'])
+    const where = buildWhere<DailyTask>(filters, search)
 
     const total = await prisma.dailyTask.count({ where })
 
