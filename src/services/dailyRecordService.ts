@@ -3,9 +3,7 @@ import { prisma } from '../prisma'
 import { TConnect, TPaginationProps, TWithPaginationResponse } from '../types/common'
 import { calculatePagination } from '../helpers/paginationCount'
 import { transformSearchParams } from '../helpers/transformSearchParams'
-import {
-  baseDailyRecordSelector, fullDailyRecordSelector
-} from '../helpers/prismaSelectors'
+import { baseDailyRecordSelector, fullDailyRecordSelector } from '../helpers/prismaSelectors'
 import { getSortParams } from '../helpers/getSortParams'
 
 export class DailyRecordService {
@@ -96,7 +94,7 @@ export class DailyRecordService {
 
   async delete(id: number) {
     await prisma.dailyTask.deleteMany({
-      where: {dailyRecordId: id}
+      where: { dailyRecordId: id },
     })
 
     return prisma.dailyRecord.delete({
@@ -109,4 +107,54 @@ export class DailyRecordService {
       Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0)
     )
   }
+
+  async getDates(id: number) {
+    const datesOnly = await prisma.dailyRecord.findMany({
+      where: {
+        userId: id,
+      },
+      select: {
+        date: true,
+      },
+    })
+
+    return datesOnly.map((date) => date.date)
+  }
+
+  async getDatesWithTasks(userId: number, monthDate: string): Promise<Date[]> {
+  const normalizedMonthDate = this.normalizeToUTCDate(monthDate ? new Date(monthDate) : new Date())
+
+  const startOfMonth = new Date(
+    normalizedMonthDate.getFullYear(),
+    normalizedMonthDate.getMonth(),
+    1
+  )
+  const endOfMonth = new Date(
+    normalizedMonthDate.getFullYear(),
+    normalizedMonthDate.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  )
+
+  const dailyRecords = await prisma.dailyRecord.findMany({
+    where: {
+      userId: userId,
+      date: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      },
+      dailyTasks: {
+        some: {}
+      }
+    },
+    select: {
+      date: true,
+    }
+  });
+
+  return dailyRecords.map(record => record.date);
+}
 }

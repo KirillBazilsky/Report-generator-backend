@@ -91,11 +91,18 @@ export class UserService {
   }
 
   async getOtp(email: string) {
-    const user  = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
       select: { otp: true },
     })
 
     return user?.otp
+  }
+
+  async getDatesWithDailyTasks(id: number) {
+    return prisma.user.findMany({
+      where: { id },
+      select: baseUserSelector,
+    })
   }
 }

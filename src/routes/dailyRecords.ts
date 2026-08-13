@@ -11,4 +11,6 @@ dailyRecord.put('/', (req, res, next) => dailyRecordController.update(req, res, 
 
 dailyRecord.delete('/', (req, res, next) => dailyRecordController.delete(req, res, next))
 
+dailyRecord.get('/dates', (req, res, next) => dailyRecordController.getRecordsDates(req, res, next))
+
 export default dailyRecord

@@ -122,7 +122,7 @@ export class DailyRecordController {
    *                  # Case 1: Single daily record (by id)
    *                  - type: object
    *                    properties:
-   *                      data: 
+   *                      data:
    *                        $ref: '#/components/schemas/DailyRecordFull'
    *                  # Case 2: Paginated list
    *                  - type: object
@@ -264,6 +264,66 @@ export class DailyRecordController {
       res.status(200).json(response)
     } catch (err) {
       next(err)
+    }
+  }
+
+  /**
+   * @swagger
+   * /daily-records/dates:
+   *   get:
+   *     summary: Get daily records dates
+   *     description: |
+   *       Returns dates based on query parameters.
+   *       - If `monthDate` is provided, returns a daily records dates in this month.
+   *       - Otherwise, returns list of all daily records dates of current user.
+   *     tags: [Daily Records]
+   *     parameters:
+   *       - in: query
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         description: user ID
+   *       - in: query
+   *         name: monthDate
+   *         schema:
+   *           type: string
+   *           format: date
+   *         description: Filter by specific date
+   *         example: "2024-03-30"
+   *     responses:
+   *       200:
+   *         description: list of daily records dates
+   *         content:
+   *           application/json:
+   *             schema:
+   *               - type: array
+   *       400:
+   *         description: Invalid query parameters
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  async getRecordsDates(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, monthDate } = req.query
+
+      if (monthDate && id) {
+        const response = await this.dailyRecordService.getDatesWithTasks(
+          Number(id),
+          monthDate as string
+        )
+
+        res.status(200).json(response)
+      }
+
+      if (id) {
+        const response = this.dailyRecordService.getDates(Number(id))
+
+        res.status(200).json(response)
+      }
+    } catch (e) {
+      next(e)
     }
   }
 }
