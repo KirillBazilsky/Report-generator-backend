@@ -7,13 +7,14 @@ import { baseDailyTaskSelector } from '../helpers/prismaSelectors'
 import { getSortParams } from '../helpers/getSortParams'
 import { buildSearch } from '../helpers/buildSearch'
 import { buildWhere } from '../helpers/buildWhere'
+import { taskService } from './servicesInit'
 
 export class DailyTaskService {
   async create(recordId: number, taskId: number, taskData: Partial<DailyTask>) {
     const { comment, status } = taskData
 
     let finalStatus = status
-    
+
     if (!finalStatus) {
       const lastDailyTask = await prisma.dailyTask.findFirst({
         where: { taskId },
@@ -22,6 +23,8 @@ export class DailyTaskService {
       })
       finalStatus = lastDailyTask?.status ?? 'IN_PROGRESS'
     }
+
+    taskService.update(taskId, { status: finalStatus })
 
     return prisma.dailyTask.create({
       data: {
@@ -38,6 +41,10 @@ export class DailyTaskService {
     payload: Partial<Omit<DailyTask, 'id'> & { taskId?: number; dailyRecordId?: number }>
   ) {
     const { taskId, dailyRecordId, ...data } = payload
+
+    if (taskId) {
+      taskService.update(taskId, { status: data.status })
+    }
 
     return prisma.dailyTask.update({
       where: {
