@@ -7,25 +7,28 @@ import { baseDailyTaskSelector } from '../helpers/prismaSelectors'
 import { getSortParams } from '../helpers/getSortParams'
 import { buildSearch } from '../helpers/buildSearch'
 import { buildWhere } from '../helpers/buildWhere'
-import { connect } from 'http2'
 
 export class DailyTaskService {
   async create(recordId: number, taskId: number, taskData: Partial<DailyTask>) {
     const { comment, status } = taskData
+
+    let finalStatus = status
+    
+    if (!finalStatus) {
+      const lastDailyTask = await prisma.dailyTask.findFirst({
+        where: { taskId },
+        orderBy: { dailyRecord: { date: 'desc' } },
+        select: { status: true },
+      })
+      finalStatus = lastDailyTask?.status ?? 'IN_PROGRESS'
+    }
+
     return prisma.dailyTask.create({
       data: {
         comment,
-        status: status ?? 'IN_PROGRESS',
-        task: {
-          connect: {
-            id: taskId,
-          },
-        },
-        dailyRecord: {
-          connect: {
-            id: recordId,
-          },
-        },
+        status: finalStatus,
+        task: { connect: { id: taskId } },
+        dailyRecord: { connect: { id: recordId } },
       },
     })
   }
